@@ -12,12 +12,13 @@ import java.io.IOException
 import java.lang.Exception
 
 class ConsulMember(
+    private val serviceName: String,
     private val consulKvClient: KeyValueClient,
     private val sessionId: String,
     private val config: ClusterConfiguration
 ) : Runnable, IMember {
     private var wasLeader = false
-    private val key: String = String.format(config.election.envelopeTemplate, config.serviceName)
+    private val key: String = String.format(config.election.envelopeTemplate, serviceName)
 
     override var isLeader: Boolean = false
         private set
@@ -57,7 +58,7 @@ class ConsulMember(
     }
 
     private fun createVoteEnvelope(): String {
-        val vote = Vote(sessionId, config.serviceName, config.serviceId)
+        val vote = Vote(sessionId, serviceName)
         return Json.encodeToString(vote)
     }
 

@@ -16,12 +16,12 @@ class ConsulLeaderController(private val config: ClusterConfiguration) {
     private val keyValueClient = KeyValueConsulClient(config.consul.host, config.consul.port)
     private val executor = ScheduledThreadPoolExecutor(2)
 
-    fun build(): IMember {
+    fun build(serviceName: String): IMember {
         val sessionId = createAndGetSessionId()
         logger.info { "Session created $sessionId" }
         executor.scheduleAtFixedRate(UpkeepSession(sessionId, sessionClient), 0L, config.session.refresh, SECONDS)
 
-        val gambler = ConsulMember(keyValueClient, sessionId, config)
+        val gambler = ConsulMember(serviceName, keyValueClient, sessionId, config)
         executor.scheduleAtFixedRate(gambler, config.election.frequency, config.election.frequency, SECONDS)
         logger.info { "Vote frequency setup on ${config.election.frequency} seconds frequency " }
         return gambler

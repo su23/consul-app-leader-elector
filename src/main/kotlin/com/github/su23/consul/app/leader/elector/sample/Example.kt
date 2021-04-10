@@ -5,8 +5,8 @@ import com.github.su23.consul.app.leader.elector.config.ClusterConfiguration
 import kotlinx.coroutines.channels.consumeEach
 
 suspend fun main() {
-    val configuration = ClusterConfiguration("SampleApp")
-    ConsulLeaderController(configuration).build().updateChannel.consumeEach {
+    val configuration = ClusterConfiguration()
+    ConsulLeaderController(configuration).build("SampleApp").updateChannel.consumeEach {
         println(it)
     }
 }

@@ -1,8 +1,6 @@
 package com.github.su23.consul.app.leader.elector.config
 
 data class ClusterConfiguration(
-    val serviceName: String,
-    val serviceId: String = "node-1",
     val consul: Consul = Consul(),
     val session: Session = Session(),
     val election: Election = Election()
