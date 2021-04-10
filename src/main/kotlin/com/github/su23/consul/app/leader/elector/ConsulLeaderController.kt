@@ -7,49 +7,29 @@ import com.github.su23.consul.app.leader.elector.config.ClusterConfiguration
 import mu.KLogging
 import java.lang.Exception
 import java.util.concurrent.*
+import java.util.concurrent.TimeUnit.*
 
-class ConsulLeaderController(private val configuration: ClusterConfiguration) {
+class ConsulLeaderController(private val config: ClusterConfiguration) {
     private companion object : KLogging()
 
-    private val sessionConsulClient = SessionConsulClient(
-        configuration.consul.host,
-        configuration.consul.port
-    )
-
-    private val keyValueConsulClient = KeyValueConsulClient(
-        configuration.consul.host,
-        configuration.consul.port
-    )
+    private val sessionClient = SessionConsulClient(config.consul.host, config.consul.port)
+    private val keyValueClient = KeyValueConsulClient(config.consul.host, config.consul.port)
     private val executor = ScheduledThreadPoolExecutor(2)
-    private var sessionId: String? = null
 
     fun build(): IMember {
         val sessionId = createAndGetSessionId()
         logger.info { "Session created $sessionId" }
-        executor.scheduleAtFixedRate(
-            UpkeepSession(sessionId, sessionConsulClient), 0L,
-            configuration.session.refresh.toLong(), TimeUnit.SECONDS
-        )
+        executor.scheduleAtFixedRate(UpkeepSession(sessionId, sessionClient), 0L, config.session.refresh, SECONDS)
 
-        val gambler = ConsulMember(keyValueConsulClient, sessionId, configuration)
-        executor.scheduleAtFixedRate(
-            gambler,
-            configuration.election.frequency.toLong(),
-            configuration.election.frequency.toLong(),
-            TimeUnit.SECONDS
-        )
-
-        logger.info { "Vote frequency setup on ${configuration.election.frequency} seconds frequency " }
+        val gambler = ConsulMember(keyValueClient, sessionId, config)
+        executor.scheduleAtFixedRate(gambler, config.election.frequency, config.election.frequency, SECONDS)
+        logger.info { "Vote frequency setup on ${config.election.frequency} seconds frequency " }
         return gambler
     }
 
     private fun createAndGetSessionId(): String {
-        if (sessionId != null) {
-            return sessionId!!
-        }
-
         val executor = Executors.newFixedThreadPool(1)
-        val sessionId = executor.submit(CreateSession(configuration.session.ttl, sessionConsulClient))
+        val sessionId = executor.submit(CreateSession(config.session.ttl, sessionClient))
         executor.shutdown()
         return try {
             sessionId.get()
@@ -59,12 +39,12 @@ class ConsulLeaderController(private val configuration: ClusterConfiguration) {
     }
 
     internal class CreateSession(
-        private val sessionTtlSeconds: Int,
-        private val sessionConsulClient: SessionConsulClient
+        private val sessionTtlSeconds: Long,
+        private val sessionClient: SessionConsulClient
     ) : Callable<String> {
         override fun call(): String {
             val consulSession = NewSession().apply { ttl = "${sessionTtlSeconds}s" }
-            return sessionConsulClient.sessionCreate(consulSession, null).value
+            return sessionClient.sessionCreate(consulSession, null).value
         }
     }
 

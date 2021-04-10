@@ -4,14 +4,14 @@ import kotlinx.coroutines.channels.Channel
 
 interface IMember {
     companion object {
-        var ELECTED_FIRST_TIME = "elected.first"
-        var ELECTED = "elected"
-        var RELEGATION = "relegation"
-        var NOT_ELECTED = "notelected"
-        var ERROR = "error"
+        const val ELECTED_FIRST_TIME = "Elected first time"
+        const val ELECTED = "Elected"
+        const val RELEGATION = "Relegated"
+        const val NOT_ELECTED = "Not elected"
+        const val ERROR = "Error"
     }
 
     val isLeader: Boolean
-    fun receiveAsFlow(): Channel<ElectionMessage>
+    val updateChannel: Channel<ElectionMessage>
 }
 

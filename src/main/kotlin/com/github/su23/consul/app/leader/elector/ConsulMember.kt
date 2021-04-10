@@ -14,19 +14,15 @@ import java.lang.Exception
 class ConsulMember(
     private val consulKvClient: KeyValueClient,
     private val sessionId: String,
-    private val clusterConfiguration: ClusterConfiguration
+    private val config: ClusterConfiguration
 ) : Runnable, IMember {
     private var wasLeader = false
-    private val channel = Channel<ElectionMessage>(Channel.BUFFERED)
-    private val key: String = String.format(
-        clusterConfiguration.election.envelopeTemplate,
-        clusterConfiguration.serviceName
-    )
+    private val key: String = String.format(config.election.envelopeTemplate, config.serviceName)
 
     override var isLeader: Boolean = false
         private set
 
-    override fun receiveAsFlow() = channel
+    override val updateChannel = Channel<ElectionMessage>(Channel.BUFFERED)
 
     override fun run() {
         try {
@@ -61,7 +57,7 @@ class ConsulMember(
     }
 
     private fun createVoteEnvelope(): String {
-        val vote = Vote(sessionId, clusterConfiguration.serviceName, clusterConfiguration.serviceId)
+        val vote = Vote(sessionId, config.serviceName, config.serviceId)
         return Json.encodeToString(vote)
     }
 
@@ -78,7 +74,7 @@ class ConsulMember(
         }
 
         val electionMessage = ElectionMessage(status, leader, "")
-        channel.sendBlocking(electionMessage)
+        updateChannel.sendBlocking(electionMessage)
     }
 
     private fun publish(e: Exception) {
@@ -89,6 +85,6 @@ class ConsulMember(
         }
 
         val electionMessage = ElectionMessage(IMember.ERROR, leaderVote, e.message ?: "")
-        channel.sendBlocking(electionMessage)
+        updateChannel.sendBlocking(electionMessage)
     }
 }
