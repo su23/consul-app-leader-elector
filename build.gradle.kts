@@ -15,13 +15,19 @@ repositories {
 
 dependencies {
 	implementation("com.ecwid.consul:consul-api:1.4.5")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	// implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
 	implementation("io.github.microutils:kotlin-logging:1.12.0")
 	implementation("org.slf4j:slf4j-simple:1.7.29")
 	implementation("commons-logging:commons-logging:1.2")
+
+	implementation("org.springframework.boot:spring-boot-autoconfigure:2.6.1")
+	// implementation("org.springframework.boot:spring-boot:2.6.1")
+	// implementation("org.springframework:spring-context:5.3.13")
+	implementation("org.springframework.cloud:spring-cloud-commons:3.1.0")
 }
 
 tasks.withType<KotlinCompile> {
